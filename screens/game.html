@@ -10,7 +10,33 @@
     <link href= "/styles/style.css" rel="stylesheet">
 </head>
 <body>
-    <div id="screen">
+    <div id="gameScreen">
+        <header>
+            <button class="returnBtn">◀</button>
+            <p id="gameNDisplayer">N=0</p>
+        </header>
+        <div id="squareGrid">
+            <svg viewBox='0 0 300 310' style='position:relative;top:0;left:0;width:100%;height:100%'>
+                <rect class='box' width=99px height=99px rx=5px ry=5px x=0px     y=0px  />
+                <rect class='box' width=99px height=99px rx=5px ry=5px x=102.5px y=0px />
+                <rect class='box' width=99px height=99px rx=5px ry=5px x=205px   y=0px />
+                <rect class='box' width=99px height=99px rx=5px ry=5px x=0px     y=102.5px />
+                <rect class='box' width=99px height=99px rx=5px ry=5px x=205px   y=102.5px />
+                <rect class='box' width=99px height=99px rx=5px ry=5px x=0px     y=205px />
+                <rect class='box' width=99px height=99px rx=5px ry=5px x=102.5px y=205px />
+                <rect class='box' width=99px height=99px rx=5px ry=5px x=205px   y=205px />
+            </svg>
+        </div>
+        <div id="divGameBtns">
+            <button id="btnVis">
+                <img id="imgVis" src="/images/eye.svg">
+            </button>
+            <button id="btnSpk">
+                <img id="imgSpk" src="/images/speaker.svg">
+            </button>
+        </div>
+    </div>
+    <div id="resultScreen">
         <header>
             <button class="returnBtn">◀</button>
             <p id="gameNDisplayer">N=0</p>
@@ -20,26 +46,53 @@
                 </svg>
             </button>
         </header>
-    </div>
-    <div id="squareGrid">
-        <svg viewBox='0 0 300 310' style='position:relative;top:0;left:0;width:100%;height:100%'>
-            <rect class='box' width=99px height=99px rx=5px ry=5px x=0px     y=0px />
-            <rect class='box' width=99px height=99px rx=5px ry=5px x=102.5px y=0px />
-            <rect class='box' width=99px height=99px rx=5px ry=5px x=205px   y=0px />
-            <rect class='box' width=99px height=99px rx=5px ry=5px x=0px     y=102.5px />
-            <rect class='box' width=99px height=99px rx=5px ry=5px x=205px   y=102.5px />
-            <rect class='box' width=99px height=99px rx=5px ry=5px x=0px     y=205px />
-            <rect class='box' width=99px height=99px rx=5px ry=5px x=102.5px y=205px />
-            <rect class='box' width=99px height=99px rx=5px ry=5px x=205px   y=205px />
-        </svg>
-    </div>
-    <div id="divGameBtns">
-        <button id="btnVis">
-            <img id="imgVis" src="/images/eye.svg">
-        </button>
-        <button id="btnSpk">
-            <img id="imgSpk" src="/images/speaker.svg">
-        </button>
+        <div id="divResultSet">
+            <div id="visResultSet">
+                <svg id="resultEye" viewBox="0 0 500 300">
+                    <g transform="matrix(0.97764922,0,0,0.97764922,3.2662669,2.1750385)">
+                        <path id="p1" fill="currentColor"
+                            d="m 137.952,194.162 c 0,-45.65 26.778,-84.941 65.465,-103.301 C 80.414,113.164 0,203.542 0,203.542 c 76.718,63.365 149.197,91.197 214.016,98.334 -44.298,-15.79 -76.063,-57.989 -76.063,-107.714 z"/>
+                        <path id="p2" fill="currentColor"
+                            d="M 504.749,194.428 C 430.591,128.308 359.874,98.561 296.047,90.349 c 41.543,17.162 70.748,57.989 70.748,105.728 0,48.313 -30.003,89.508 -72.315,106.332 127.693,-18.483 210.268,-107.981 210.268,-107.981 z"/>
+                        <path id="p3" fill="#currentColor"
+                            d="m 310.732,135.323 c 0.236,1.372 0.44,2.744 0.44,4.157 0,14.981 -12.144,27.095 -27.115,27.095 -14.94,0 -27.095,-12.114 -27.095,-27.095 0,-11.182 6.789,-20.746 16.425,-24.914 -6.717,-1.72 -13.762,-2.744 -21.043,-2.744 -46.663,0 -84.5,37.847 -84.5,84.531 0,46.663 37.837,84.531 84.5,84.531 46.725,0 84.541,-37.868 84.541,-84.531 0.01,-24.023 -10.066,-45.639 -26.153,-61.031 z"/>
+                        <path id="p4" fill="currentColor"
+                            d="M 350.615,83.508 377.297,29.003 404.899,42.515 378.217,97.02 Z"/>
+                        <path id="p5" fill="currentColor"
+                            d="m 124.032,96.038 -23.756,-51.3 27.876,-12.909 23.756,51.3 z"/>
+                        <path id="p6" fill="currentColor"
+                            d="M 227.765,72.635 228.615,0 l 30.717,0.359 -0.85,72.635 z"/>
+                    </g>
+                </svg>
+                <p id="visMatches" class="beigeText"></p>
+                <p id="visMisses" class="beigeText"></p>
+                <p id="visFalses" class="beigeText"></p>
+            </div>
+            <div id="divInfoSet">
+                
+                <p class="beigeText infoSetTxt">Matches</p>
+                <p class="beigeText infoSetTxt">Misses</p>
+                <p class="beigeText infoSetTxt">Falses</p>
+            </div>
+            <div id="audResultSet">
+                <svg
+                    viewBox="0 0 500 300"
+                    width="500"
+                    height="300"
+                    id="resultSpk"
+                >
+                    <path
+                    d="M 38.385298,88.80401 H 123.53458 L 256.89985,-0.55252 V 298.76751 L 123.03358,209.4389 H 38.386238 V 88.80469 Z m 422.236582,89.3075 c -5.90175,45.56056 -30.00976,86.4832 -72.34284,122.44101 22.1596,-27.4073 34.95661,-59.4246 39.39304,-95.38242 3.92509,-33.46111 0.48217,-65.14333 -11.32134,-94.67072 -14.27174,-35.94352 -37.907,-61.59305 -70.88695,-76.88047 41.3311,12.46926 71.85127,31.67541 91.55297,57.67431 19.69134,25.25247 27.56034,54.08248 23.60606,86.81828 v 0 z m -59.04577,3.92689 c 2.96077,-25.97096 -3.44292,-49.13809 -19.19976,-69.40462 -15.73801,-20.64997 -40.35642,-36.2786 -73.30716,-46.27157 26.54705,12.10013 45.75717,32.74941 57.06911,61.57261 9.3635,23.84339 12.30448,49.11698 8.85309,75.81326 -3.42314,28.8232 -13.78017,54.10359 -31.48449,76.15515 33.9339,-28.83681 53.64502,-61.21711 58.07204,-97.86483 v 0 z m -53.64407,4.61681 c 2.95135,-20.99118 -2.46919,-39.48632 -15.25584,-55.87499 -12.80643,-16.38186 -31.98642,-28.83 -58.06168,-36.64772 21.13782,9.96574 35.92093,26.32649 45.24583,49.46568 7.40662,18.87176 9.84566,39.15805 7.40662,60.51223 -2.96077,22.76938 -11.35054,43.41935 -25.60252,60.84048 27.57918,-22.76257 42.83502,-49.11016 46.26853,-78.29567 z"
+                    fill="currentColor"
+                    />
+                </svg>
+                <p id="audMatches" class="beigeText"></p>
+                <p id="audMisses" class="beigeText"></p>
+                <p id="audFalses" class="beigeText"></p>
+            </div>
+        </div>
     </div>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
+<script src="/js/logic.js"></script>
 </html>

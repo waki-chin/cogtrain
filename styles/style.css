@@ -74,3 +74,49 @@ header{
     height: 36px;
     width: 60px;
 }
+#resultScreen{
+    display: ;
+}
+#resultEye{
+    height: 60px;
+    width: 120px;
+}
+#resultEye path{
+    fill: #d3ceda;
+}
+#resultSpk{
+    height: 60px;
+    width: 120px;
+    color:#d3ceda;
+}
+#gameScreen{
+    display: none;
+}
+.beigeText{
+    color: #d3ceda;
+}
+#divResultSet{
+    display: flex;
+    justify-content: space-evenly;
+    height:calc(80% - 20px);
+    width:50rem;
+    position:absolute;
+    top: 10rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.infoSetTxt{
+    font-size: 2rem;
+}
+#visResultSet{
+    position: relative;
+    top: 0;
+}
+#spkResultSet{
+    position: relative;
+    top: 0;
+}
+#divInfoSet{
+    position: relative;
+    top: 80px;
+}
