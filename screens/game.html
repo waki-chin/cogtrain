@@ -10,10 +10,10 @@
     <link href= "/styles/style.css" rel="stylesheet">
 </head>
 <body>
-    <div id="gameScreen">
+    <div id="gameScreen" class="screens">
         <header>
             <button class="returnBtn">◀</button>
-            <p id="gameNDisplayer">N=0</p>
+            <p class="gameNDisplayer">N=0</p>
         </header>
         <div id="squareGrid">
             <svg viewBox='0 0 300 310' style='position:relative;top:0;left:0;width:100%;height:100%'>
@@ -36,10 +36,10 @@
             </button>
         </div>
     </div>
-    <div id="resultScreen">
+    <div id="resultScreen" class="screens">
         <header>
             <button class="returnBtn">◀</button>
-            <p id="gameNDisplayer">N=0</p>
+            <p class="gameNDisplayer">N = 1</p>
             <button class="btnSetting">
                 <svg class="imgSetting" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M20.1 9.2214C18.29 9.2214 17.55 7.9414 18.45 6.3714C18.97 5.4614 18.66 4.3014 17.75 3.7814L16.02 2.7914C15.23 2.3214 14.21 2.6014 13.74 3.3914L13.63 3.5814C12.73 5.1514 11.25 5.1514 10.34 3.5814L10.23 3.3914C9.78 2.6014 8.76 2.3214 7.97 2.7914L6.24 3.7814C5.33 4.3014 5.02 5.4714 5.54 6.3814C6.45 7.9414 5.71 9.2214 3.9 9.2214C2.86 9.2214 2 10.0714 2 11.1214V12.8814C2 13.9214 2.85 14.7814 3.9 14.7814C5.71 14.7814 6.45 16.0614 5.54 17.6314C5.02 18.5414 5.33 19.7014 6.24 20.2214L7.97 21.2114C8.76 21.6814 9.78 21.4014 10.25 20.6114L10.36 20.4214C11.26 18.8514 12.74 18.8514 13.65 20.4214L13.76 20.6114C14.23 21.4014 15.25 21.6814 16.04 21.2114L17.77 20.2214C18.68 19.7014 18.99 18.5314 18.47 17.6314C17.56 16.0614 18.3 14.7814 20.11 14.7814C21.15 14.7814 22.01 13.9314 22.01 12.8814V11.1214C22 10.0814 21.15 9.2214 20.1 9.2214ZM12 15.2514C10.21 15.2514 8.75 13.7914 8.75 12.0014C8.75 10.2114 10.21 8.7514 12 8.7514C13.79 8.7514 15.25 10.2114 15.25 12.0014C15.25 13.7914 13.79 15.2514 12 15.2514Z" fill="currentColor"/>
@@ -64,15 +64,26 @@
                             d="M 227.765,72.635 228.615,0 l 30.717,0.359 -0.85,72.635 z"/>
                     </g>
                 </svg>
-                <p id="visMatches" class="beigeText"></p>
-                <p id="visMisses" class="beigeText"></p>
-                <p id="visFalses" class="beigeText"></p>
+                <p class="beigeText infoSetTxt firstMatch" id="visAccuracyTxt">80%</p>
+                <p id="visMatches" class="greenTxt infoSetTxt"></p>
+                <p id="visMisses" class="redTxt infoSetTxt"></p>
+                <p id="visFalses" class="redTxt infoSetTxt"></p>
             </div>
             <div id="divInfoSet">
-                
+                <p class="beigeText infoSetTxt" id="genAccuracyTxt">80%</p>
+                <p class="beigeText infoSetTxt">Accuracy</p>
                 <p class="beigeText infoSetTxt">Matches</p>
                 <p class="beigeText infoSetTxt">Misses</p>
                 <p class="beigeText infoSetTxt">Falses</p>
+                <button id="btnReplay">
+                    <svg id="replayImg" version="1.1" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                        <g transform="matrix(2.408601,3.7631993,-3.7631993,2.408601,385.77327,-419.10351)">
+                    <path fill="currentColor" fill-rule="evenodd" stroke-width="18.765" stroke-linecap="round" stroke-linejoin="bevel"
+                        d="m 76.198099,149.59427 a 56.206524,56.206524 0 0 0 25.815691,11.63715 56.206524,56.206524 0 0 0 62.45179,-36.70558 56.206524,56.206524 0 0 0 -25.59095,-67.770219 56.206524,56.206524 0 0 0 -71.126932,13.736436 l 11.589801,9.367846 a 41.303509,41.303509 0 0 1 58.086861,-6.157052 41.303509,41.303509 0 0 1 6.15828,58.085339 41.303509,41.303509 0 0 1 -58.08535,6.15828 41.303509,41.303509 0 0 1 -15.326627,-32.06476 l -14.916411,0.0204 a 56.206524,56.206524 0 0 0 20.943847,43.69212 z"/>
+                    <path fill="currentColor" d="m 83.950747,108.83192 -40.218459,-0.0705 20.10923,-17.586364 z"/>
+                        </g>
+                    </svg>
+                </button>
             </div>
             <div id="audResultSet">
                 <svg
@@ -86,10 +97,55 @@
                     fill="currentColor"
                     />
                 </svg>
-                <p id="audMatches" class="beigeText"></p>
-                <p id="audMisses" class="beigeText"></p>
-                <p id="audFalses" class="beigeText"></p>
+                <p class="beigeText infoSetTxt firstMatch" id="audAccuracyTxt">80%</p>
+                <p id="audMatches" class="greenTxt infoSetTxt firstMatch"></p>
+                <p id="audMisses" class="redTxt infoSetTxt"></p>
+                <p id="audFalses" class="redTxt infoSetTxt"></p>
             </div>
+        </div>
+    </div>
+    <div id="initialScreen" class="screens">
+        <header>
+            <button class="statsBtn">
+                <svg class="statsImg" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                    viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve">
+                    <path d="M32,480h480v32H0V0h32v96h32v32H32v64h32v32H32v64h32v32H32v64h32v32H32V480z M96,336c0-26.5,21.484-48,48-48
+                        c4.984,0,9.688,0.969,14.219,2.375l41.844-55.813C194.984,226.969,192,217.813,192,208c0-26.5,21.5-48,48-48s48,21.5,48,48
+                        c0,5-0.969,9.688-2.391,14.219l55.797,41.844C349.031,259,358.156,256,368,256c2,0,3.875,0.344,5.813,0.594L429.5,145.25
+                        c-8.313-8.625-13.5-20.313-13.5-33.25c0-26.5,21.5-48,48-48s48,21.5,48,48s-21.5,48-48,48c-2,0-3.875-0.344-5.813-0.594
+                        L402.531,270.75C410.844,279.375,416,291.063,416,304c0,26.5-21.5,48-48,48s-48-21.5-48-48c0-4.969,0.969-9.688,2.375-14.219
+                        l-55.797-41.844C258.969,253,249.828,256,240,256c-4.984,0-9.688-0.969-14.203-2.375l-41.859,55.781
+                        C189.016,317.031,192,326.156,192,336c0,26.5-21.484,48-48,48S96,362.5,96,336z M448,112c0,8.844,7.156,16,16,16s16-7.156,16-16
+                        s-7.156-16-16-16S448,103.156,448,112z M352,304c0,8.844,7.156,16,16,16s16-7.156,16-16s-7.156-16-16-16S352,295.156,352,304z
+                        M224,208c0,8.844,7.156,16,16,16s16-7.156,16-16s-7.156-16-16-16S224,199.156,224,208z M128,336c0,8.844,7.156,16,16,16
+                        s16-7.156,16-16s-7.156-16-16-16S128,327.156,128,336z" fill="currentColor"/>
+                </svg>
+            </button>
+            <button class="btnSetting">
+                <svg class="imgSetting" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.1 9.2214C18.29 9.2214 17.55 7.9414 18.45 6.3714C18.97 5.4614 18.66 4.3014 17.75 3.7814L16.02 2.7914C15.23 2.3214 14.21 2.6014 13.74 3.3914L13.63 3.5814C12.73 5.1514 11.25 5.1514 10.34 3.5814L10.23 3.3914C9.78 2.6014 8.76 2.3214 7.97 2.7914L6.24 3.7814C5.33 4.3014 5.02 5.4714 5.54 6.3814C6.45 7.9414 5.71 9.2214 3.9 9.2214C2.86 9.2214 2 10.0714 2 11.1214V12.8814C2 13.9214 2.85 14.7814 3.9 14.7814C5.71 14.7814 6.45 16.0614 5.54 17.6314C5.02 18.5414 5.33 19.7014 6.24 20.2214L7.97 21.2114C8.76 21.6814 9.78 21.4014 10.25 20.6114L10.36 20.4214C11.26 18.8514 12.74 18.8514 13.65 20.4214L13.76 20.6114C14.23 21.4014 15.25 21.6814 16.04 21.2114L17.77 20.2214C18.68 19.7014 18.99 18.5314 18.47 17.6314C17.56 16.0614 18.3 14.7814 20.11 14.7814C21.15 14.7814 22.01 13.9314 22.01 12.8814V11.1214C22 10.0814 21.15 9.2214 20.1 9.2214ZM12 15.2514C10.21 15.2514 8.75 13.7914 8.75 12.0014C8.75 10.2114 10.21 8.7514 12 8.7514C13.79 8.7514 15.25 10.2114 15.25 12.0014C15.25 13.7914 13.79 15.2514 12 15.2514Z" fill="currentColor"/>
+                </svg>
+            </button>
+        </header>
+        <div id="initialContainer">
+            <p class="beigeText initialNDisplayer">N = 1</p>
+            <div id="playInfoContainer">
+                <p class="beigeText goalText">Daily goal</p>
+                <p class="beigeText goalText">0/20</p>
+                <button class="playBtn">
+                    <svg class="playImg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M7.23832 3.04445C5.65196 2.1818 3.75 3.31957 3.75 5.03299L3.75 18.9672C3.75 20.6806 5.65196 21.8184 7.23832 20.9557L20.0503 13.9886C21.6499 13.1188 21.6499 10.8814 20.0503 10.0116L7.23832 3.04445ZM2.25 5.03299C2.25 2.12798 5.41674 0.346438 7.95491 1.72669L20.7669 8.6938C23.411 10.1317 23.411 13.8685 20.7669 15.3064L7.95491 22.2735C5.41674 23.6537 2.25 21.8722 2.25 18.9672L2.25 5.03299Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="settingScreen" class="screens">
+        <header>
+            <button class="returnBtn">◀</button>
+        </header>
+        <div id="settingsContainer">
+            
         </div>
     </div>
 </body>

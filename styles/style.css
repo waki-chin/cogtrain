@@ -1,6 +1,18 @@
 body{
     background-color: #121212;
 }
+#initialScreen{
+    display: none;
+}
+#gameScreen{
+    display: none;
+}
+#resultScreen{
+    display: none;
+}
+#settingScreen{
+    display: block;
+}
 .box{
     fill: #a8d2dc;
 }
@@ -35,12 +47,39 @@ header{
     font-size: 1.75rem;
     cursor: pointer;
 }
+.statsBtn{
+    position: absolute;
+    left: 2rem;
+    border: none;
+    background: none;
+    font-size: 1.75rem;
+    cursor: pointer;
+    color: #E4E4E4;
+}
+.statsImg{
+    height: 35px;
+    width: 35px;
+    color: #E4E4E4;
+}
+.playBtn{
+    border: none;
+    background: none;
+    font-size: 1.75rem;
+    cursor: pointer;
+    color: #E4E4E4;
+    margin: 20px;
+}
+.playImg{
+    height: 70px;
+    width: 70px;
+    color: #E4E4E4;
+}
 .imgSetting{
     height: 40px;
     width: 40px;
     color: #E4E4E4;
 }
-#gameNDisplayer{
+.gameNDisplayer{
     font-size: 2rem;
     color: #E0E0E0;
 }
@@ -74,9 +113,6 @@ header{
     height: 36px;
     width: 60px;
 }
-#resultScreen{
-    display: ;
-}
 #resultEye{
     height: 60px;
     width: 120px;
@@ -89,34 +125,92 @@ header{
     width: 120px;
     color:#d3ceda;
 }
-#gameScreen{
-    display: none;
-}
 .beigeText{
     color: #d3ceda;
 }
 #divResultSet{
     display: flex;
     justify-content: space-evenly;
-    height:calc(80% - 20px);
-    width:50rem;
+    height:calc(75% - 50px);
+    width: 90%;
     position:absolute;
-    top: 10rem;
+    top: 6rem;
     left: 50%;
     transform: translateX(-50%);
 }
 .infoSetTxt{
     font-size: 2rem;
+    margin: 20px;
 }
 #visResultSet{
     position: relative;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
     top: 0;
+    height: fit-content;
 }
-#spkResultSet{
+#audResultSet{
     position: relative;
     top: 0;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    height: fit-content;
 }
 #divInfoSet{
     position: relative;
-    top: 80px;
+    top: 0;
+    margin-top: 0;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    height: fit-content;
+}
+.greenTxt{
+    color: #7aed7a;
+}
+.redTxt{
+    color: #fd4c4c;
+}
+.firstMatch{
+    margin-top: 46px;
+}
+#replayImg{
+    width: 70px;
+    height: 70px;
+    color: #d3ceda;
+}
+#btnReplay{
+    border: none;
+    background: none;
+    margin-top: 15px;
+}
+#initialContainer{
+    position: absolute;
+    height: calc(75%-20px);
+    width: 300px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 35%;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: flex-end;
+}
+#playInfoContainer{
+    position: relative;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+}
+.goalText{
+    margin: 5px;
+    font-size: 1.5rem;
+}
+.initialNDisplayer{
+    position: relative;
+    bottom: 7rem;
+    font-size: 3rem;
+    margin: 0;
 }
