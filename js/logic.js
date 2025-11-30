@@ -1,15 +1,26 @@
 var N = 1;
-var N_base = 20;
+const N_base = 20;
 var config = {
-    "visKey":"d",
-    "spkKey":"f",
+    "visKey":'KeyD',
+    "audKey":'KeyF',
+    "playReplayKey":'Space',
+    "returnKey":'Escape',
+    "goToSettingsKey":'KeyJ',
+    "goToStatsKey":'KeyK',
     "stimTime":750,
     "stimDelay":2000
 };
 const box = document.querySelectorAll('.box');
 const btnVis = document.getElementById('btnVis');
 const btnSpk = document.getElementById('btnSpk');
+const resultScreen = document.getElementById('resultScreen');
+const initialScreen = document.getElementById('initialScreen');
+const gameScreen = document.getElementById('gameScreen');
+const settingScreen = document.getElementById('settingScreen');
+const statsScreen = document.getElementById('statsScreen');
+const popupContainer = document.getElementById('popupContainer');
 var gameIsRunning = false;
+var settingTargetId;
 
 document.querySelectorAll(".returnBtn").forEach(btn => {
     btn.addEventListener('click', goToInitial);
@@ -22,11 +33,21 @@ document.querySelectorAll(".btnSetting").forEach(btn => {
 });
 document.querySelector('.playBtn').addEventListener('click', play);
 document.getElementById('btnReplay').addEventListener('click', replay);
-document.addEventListener('keydown', initialOnKeyPress);
+document.querySelector('.btnNMinus').addEventListener('click', () =>{
+    if (N > 1){
+        N--;
+        document.querySelector('.initialNDisplayerText').innerHTML = `N = ${N}`
+    }
+});
+document.querySelector('.btnNAdd').addEventListener('click', () =>{
+    N++;
+    document.querySelector('.initialNDisplayerText').innerHTML = `N = ${N}`
+});
 
-const resultScreen = document.getElementById('resultScreen');
-const initialScreen = document.getElementById('initialScreen');
-const gameScreen = document.getElementById('gameScreen');
+
+goToInitial();
+
+popupContainer.addEventListener('click', togglePopup);
 
 const sprites = loadSoundSprites();
 const letters = ['B', 'C', 'D', 'G', 'H', 'K', 'P', 'Q', 'T', 'W'];
@@ -35,7 +56,7 @@ var visIsPressed = false;
 var spkIsPressed = false;
 var visResponseTime;
 var audResponseTime;
-
+var settingKeyExpected = false;
 
 function game(){
 
@@ -212,26 +233,70 @@ function loadSoundSprites() {
 
 
 function gameOnKeyPress(e){
-    if (e.key === config.visKey) {
+    if (e.code === config.visKey) {
         visClick();
     }
-    else if (e.key === config.spkKey) {
+    else if (e.code === config.audKey) {
         spkClick();
     }
-    else if (e.code === 'Space'){
+    else if (e.code === config.returnKey){
         goToInitial();
     }
 }
 
 function initialOnKeyPress(e){
-    if (e.code === 'Space'){
+    if (e.code === config.playReplayKey){
         play();
+    }
+    else if(e.code === config.goToSettingsKey){
+        goToSettings();
+    }
+    else if (e.code === config.goToStatsKey){
+        goToStats();
     }
 }
 
 function resultOnKeyPress(e){
-    if (e.code === 'Space'){
+    if (e.code === config.playReplayKey){
         replay();
+    }
+}
+
+function settingOnKeyPress(e){
+    if (settingKeyExpected){
+        switch(settingTargetId){
+            case 'visKeyBtn':
+                config.visKey = e.code;
+                break;
+            case 'audKeyBtn':
+                config.audKey = e.code;
+                break;
+            case 'returnKeyBtn':
+                config.returnKey = e.code;
+                break;
+            case 'playKeyBtn':
+                config.playReplayKey = e.code;
+                break;
+            case 'openSettingsKeyBtn':
+                config.goToSettingsKey = e.code;
+                break;
+            case 'openStatsKeyBtn':
+                config.goToStatsKey = e.code;
+                break;
+        }
+        loadSettings();
+        togglePopup();
+        settingKeyExpected = false;
+    }
+    else if (e.code === config.returnKey){
+        goToInitial();
+    }
+}
+
+function statsOnKeyPress(e){
+    switch(e.code){
+        case config.returnKey:
+            goToInitial();
     }
 }
 
@@ -258,6 +323,27 @@ function spkClick(){
         btnSpk.style.backgroundColor = '#d3ceda'
     }
 }
+
+function settingBtnClick(e){
+    settingTargetId = e.target.id;
+    if ([
+        "visKeyBtn",
+        "audKeyBtn",
+        "returnKeyBtn",
+        "playKeyBtn",
+        "openSettingsKeyBtn",
+        "openStatsKeyBtn"
+        ].includes(settingTargetId)) {
+        e.target.blur();
+        settingKeyExpected = true;
+        togglePopup();
+    }
+    else if(settingTargetId === 'popupContainer'){
+        settingKeyExpected = false;
+        togglePopup();
+    }
+};
+
 
 
 function buildGameSequence (){
@@ -359,22 +445,47 @@ function play(){
 };
 
 function goToSettings(){
-
+    document.querySelectorAll('.keySettingBtn').forEach(btn => {
+        btn.addEventListener('click', settingBtnClick);
+    });
+    document.querySelectorAll('.screens').forEach(screen =>{
+        screen.style.display = 'none'
+    });
+    loadSettings();
+    document.removeEventListener('keydown', initialOnKeyPress);
+    document.addEventListener('keydown', settingOnKeyPress);
+    settingScreen.style.display = 'block';
 };
+
+function loadSettings(){
+    document.getElementById('visKeyBtn').innerHTML = config.visKey;
+    document.getElementById('audKeyBtn').innerHTML = config.audKey;
+    document.getElementById('returnKeyBtn').innerHTML = config.returnKey;
+    document.getElementById('playKeyBtn').innerHTML = config.playReplayKey;
+    document.getElementById('openSettingsKeyBtn').innerHTML = config.goToSettingsKey;
+    document.getElementById('openStatsKeyBtn').innerHTML = config.goToStatsKey;
+}
 
 function goToInitial(){
     gameIsRunning = false;
     document.addEventListener('keydown', initialOnKeyPress);
     document.removeEventListener('keydown', resultOnKeyPress);
     document.removeEventListener('keydown', gameOnKeyPress);
+    document.removeEventListener('keydown', settingOnKeyPress);
     document.querySelectorAll('.screens').forEach((screen) =>{
         screen.style.display = 'none'
     });
+    document.querySelector('.initialNDisplayerText').innerHTML = `N = ${N}`
     initialScreen.style.display = 'block';
 };
 
 function goToStats(){
-
+    document.querySelectorAll('.screens').forEach((screen) =>{
+        screen.style.display = 'none'
+    });
+    document.addEventListener('keydown', statsOnKeyPress);
+    document.removeEventListener('keydown', initialOnKeyPress);
+    statsScreen.style.display = 'block';
 };
 
 function goToResult(){
@@ -387,3 +498,13 @@ function goToResult(){
     document.addEventListener('keydown', resultOnKeyPress);
     resultScreen.style.display = 'block';
 };
+
+function togglePopup(){
+    if (window.getComputedStyle(popupContainer).display === 'none'){
+        popupContainer.style.display = 'block';
+    }
+    else{
+        popupContainer.style.display = 'none';
+        settingKeyExpected = false; 
+    }
+}
