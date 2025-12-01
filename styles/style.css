@@ -202,7 +202,7 @@ header{
 #initialContainer{
     position: absolute;
     height: calc(75%-20px);
-    width: 300px;
+    width: 400px;
     left: 50%;
     transform: translateX(-50%);
     top: 35%;
@@ -235,7 +235,7 @@ header{
     margin: 0;
 }
 #settingsContainer{
-    margin-top: 2rem;
+    margin-top: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -307,6 +307,40 @@ header{
     align-items: center;
     justify-content: center;
 }
+.btnN{
+    border: none;
+    background: none;
+    font-size: 4rem;
+    margin-bottom: 10px;
+}
+.btnNMinus{
+    margin-right: 3rem;
+}
+.btnNAdd{
+    margin-left: 3rem;
+}
+.resultGoalText{
+    font-size: 2rem;
+    position: absolute;
+    right: 2rem;
+}
+.resultNDisplayer{
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+.btnNResult{
+    border: none;
+    background: none;
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+.resultNDisplayerText{
+    font-size: 2rem;
+    color: #E0E0E0;
+}
 @media (max-width: 600px) {
     .btnSetting{
         width: 40px;
@@ -331,7 +365,7 @@ header{
     }
     .returnBtn{
         position: absolute;
-        left: 1.5rem;
+        left: 1rem;
         border: none;
         background: none;
         font-size: 1.7rem;
@@ -340,7 +374,7 @@ header{
     }
     .btnSetting{
         position: absolute;
-        right: 1.5rem;
+        right: 1rem;
         border: none;
         background: none;
         font-size: 1.75rem;
@@ -348,23 +382,33 @@ header{
     }
     .statsBtn{
         position: absolute;
-        left: 1.5rem;
+        left: 1rem;
         border: none;
         background: none;
         font-size: 1.75rem;
         cursor: pointer;
         color: #E4E4E4;
     }
-}
-.btnN{
-    border: none;
-    background: none;
-    font-size: 4rem;
-    margin-bottom: 10px;
-}
-.btnNMinus{
-    margin-right: 3rem;
-}
-.btnNAdd{
-    margin-left: 3rem;
+    .btnNResult{
+        font-size: 2.5rem;
+    }
+    .resultGoalText{
+        font-size: 1.75rem;
+        right: 1rem;
+    }
+    .initialNDisplayer{
+        font-size: 2rem;
+    }
+    .btnNMinus{
+        margin-right: 2rem;
+    }
+    .btnNAdd{
+        margin-left: 2rem;
+    }
+    #btnMinusResult{
+        margin-right: 0.9rem;
+    }
+    #btnAddResult{
+        margin-left: 0.8rem;
+    }
 }

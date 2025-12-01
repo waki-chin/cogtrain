@@ -1,14 +1,18 @@
 var N = 1;
 const N_base = 20;
+var dailyGamesPlayed = 0;
 var config = {
     "visKey":'KeyD',
     "audKey":'KeyF',
-    "playReplayKey":'Space',
+    "playKey":'Space',
     "returnKey":'Escape',
     "goToSettingsKey":'KeyJ',
     "goToStatsKey":'KeyK',
+    "addNKey":'ArrowUp',
+    "subtractNKey":'ArrowDown',
     "stimTime":750,
-    "stimDelay":2000
+    "stimDelay":2800,
+    "dailyGoal":20
 };
 const box = document.querySelectorAll('.box');
 const btnVis = document.getElementById('btnVis');
@@ -22,6 +26,8 @@ const popupContainer = document.getElementById('popupContainer');
 var gameIsRunning = false;
 var settingTargetId;
 
+goToInitial();
+
 document.querySelectorAll(".returnBtn").forEach(btn => {
     btn.addEventListener('click', goToInitial);
 });
@@ -32,20 +38,16 @@ document.querySelectorAll(".btnSetting").forEach(btn => {
     btn.addEventListener('click', goToSettings);
 });
 document.querySelector('.playBtn').addEventListener('click', play);
-document.getElementById('btnReplay').addEventListener('click', replay);
-document.querySelector('.btnNMinus').addEventListener('click', () =>{
-    if (N > 1){
-        N--;
-        document.querySelector('.initialNDisplayerText').innerHTML = `N = ${N}`
-    }
-});
-document.querySelector('.btnNAdd').addEventListener('click', () =>{
-    N++;
-    document.querySelector('.initialNDisplayerText').innerHTML = `N = ${N}`
-});
+document.getElementById('btnReplay').addEventListener('click', play);
+document.querySelectorAll('.btnNMinus').forEach(btn => {
+    btn.addEventListener('click', subtractN)
+})
+document.querySelectorAll('.btnNAdd').forEach(btn => {
+    btn.addEventListener('click', addN)
+})
 
 
-goToInitial();
+
 
 popupContainer.addEventListener('click', togglePopup);
 
@@ -207,6 +209,7 @@ function game(){
         document.getElementById('audMatches').innerHTML     =   n_aud_matches;
         document.getElementById('audMisses').innerHTML      =   aud_misses;
         document.getElementById('audFalses').innerHTML      =   aud_falses;
+        dailyGamesPlayed++;
         goToResult();
     }
 }
@@ -245,20 +248,36 @@ function gameOnKeyPress(e){
 }
 
 function initialOnKeyPress(e){
-    if (e.code === config.playReplayKey){
-        play();
-    }
-    else if(e.code === config.goToSettingsKey){
-        goToSettings();
-    }
-    else if (e.code === config.goToStatsKey){
-        goToStats();
+    switch(e.code){
+        case config.playKey:
+            play();
+            break;
+        case config.goToSettingsKey:
+            goToSettings();
+            break;
+        case config.goToStatsKey:
+            goToStats();
+            break;
+        case config.addNKey:
+            addN();
+            break;
+        case config.subtractNKey:
+            subtractN();
+            break;
     }
 }
 
 function resultOnKeyPress(e){
-    if (e.code === config.playReplayKey){
-        replay();
+    switch(e.code){
+        case config.playKey:
+            play();
+            break;
+        case config.addNKey:
+            addN();
+            break;
+        case config.subtractNKey:
+            subtractN();
+            break;
     }
 }
 
@@ -275,7 +294,7 @@ function settingOnKeyPress(e){
                 config.returnKey = e.code;
                 break;
             case 'playKeyBtn':
-                config.playReplayKey = e.code;
+                config.playKey = e.code;
                 break;
             case 'openSettingsKeyBtn':
                 config.goToSettingsKey = e.code;
@@ -283,6 +302,11 @@ function settingOnKeyPress(e){
             case 'openStatsKeyBtn':
                 config.goToStatsKey = e.code;
                 break;
+            case 'addNKeyBtn':
+                config.addNKey = e.code;
+                break;
+            case 'subtractNKeyBtn':
+                config.subtractNKey = e.code;
         }
         loadSettings();
         togglePopup();
@@ -332,7 +356,9 @@ function settingBtnClick(e){
         "returnKeyBtn",
         "playKeyBtn",
         "openSettingsKeyBtn",
-        "openStatsKeyBtn"
+        "openStatsKeyBtn",
+        "addNKeyBtn",
+        "subtractNKeyBtn"
         ].includes(settingTargetId)) {
         e.target.blur();
         settingKeyExpected = true;
@@ -344,7 +370,21 @@ function settingBtnClick(e){
     }
 };
 
+function addN(){
+    N++;
+    document.querySelectorAll('.NDisplayer').forEach(displayer => {
+        displayer.innerHTML = `N = ${N}`;
+    });
+};
 
+function subtractN(){
+    if (N > 1){
+        N--;
+        document.querySelectorAll('.NDisplayer').forEach(displayer => {
+            displayer.innerHTML = `N = ${N}`;
+        });
+    }
+}
 
 function buildGameSequence (){
     
@@ -426,12 +466,6 @@ function calcAccuracy(vis_matches, vis_misses, vis_falses, aud_matches, aud_miss
     return [gen_accuracy, vis_accuracy, aud_accuracy];
 }
 
-function replay(){
-    resultScreen.style.display = 'none';
-    gameScreen.style.display = 'block';
-    game();
-};
-
 function play(){
     document.querySelectorAll('.screens').forEach((screen) =>{
         screen.style.display = 'none'
@@ -440,6 +474,10 @@ function play(){
     btnVis.addEventListener('click', visClick);
     btnSpk.addEventListener('click', spkClick);
     document.removeEventListener('keydown', initialOnKeyPress);
+    document.removeEventListener('keydown', resultOnKeyPress)
+    document.querySelectorAll('.gameNDisplayer').forEach(displayer => {
+        displayer.innerHTML = `N = ${N}`
+    });
     gameScreen.style.display = 'block';
     game();
 };
@@ -461,9 +499,11 @@ function loadSettings(){
     document.getElementById('visKeyBtn').innerHTML = config.visKey;
     document.getElementById('audKeyBtn').innerHTML = config.audKey;
     document.getElementById('returnKeyBtn').innerHTML = config.returnKey;
-    document.getElementById('playKeyBtn').innerHTML = config.playReplayKey;
+    document.getElementById('playKeyBtn').innerHTML = config.playKey;
     document.getElementById('openSettingsKeyBtn').innerHTML = config.goToSettingsKey;
     document.getElementById('openStatsKeyBtn').innerHTML = config.goToStatsKey;
+    document.getElementById('addNKeyBtn').innerHTML = config.addNKey;
+    document.getElementById('subtractNKeyBtn').innerHTML = config.subtractNKey;
 }
 
 function goToInitial(){
@@ -475,7 +515,10 @@ function goToInitial(){
     document.querySelectorAll('.screens').forEach((screen) =>{
         screen.style.display = 'none'
     });
-    document.querySelector('.initialNDisplayerText').innerHTML = `N = ${N}`
+    document.querySelector('.initialNDisplayerText').innerHTML = `N = ${N}`;
+    document.querySelectorAll('.dailyNumber').forEach(displayer => {
+        displayer.innerHTML = `${dailyGamesPlayed}/${config.dailyGoal}`
+    });
     initialScreen.style.display = 'block';
 };
 
@@ -496,6 +539,10 @@ function goToResult(){
     btnSpk.removeEventListener('click', spkClick);
     document.removeEventListener('keydown', gameOnKeyPress);
     document.addEventListener('keydown', resultOnKeyPress);
+    document.querySelectorAll('.dailyNumber').forEach(displayer => {
+        displayer.innerHTML = `${dailyGamesPlayed}/${config.dailyGoal}`
+    });
+    document.querySelector('.resultNDisplayerText').innerHTML = `N = ${N}`
     resultScreen.style.display = 'block';
 };
 
