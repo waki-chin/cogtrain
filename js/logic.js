@@ -1,3 +1,8 @@
+import {app, analytics, auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged} from '/js/firebase.js'
+
+
+// essential declaration
+
 var N = 1;
 const N_base = 20;
 var dailyGamesPlayed = 0;
@@ -14,28 +19,56 @@ var config = {
     "stimDelay":2800,
     "dailyGoal":20
 };
+const enumScreens = {
+    "initial":0,
+    "game":1,
+    "result":2,
+    "settings":3,
+    "stats":4
+};
+const sprites = loadSoundSprites();
+const letters = ['B', 'C', 'D', 'G', 'H', 'K', 'P', 'Q', 'T', 'W'];
+var currentScreen = 0;
+var gameIsRunning = false;
+var gameSequenceTimeout;
+var settingTargetId = "";
+var visIsPressed = false;
+var spkIsPressed = false;
+var visResponseTime;
+var audResponseTime;
+var settingKeyExpected = false;
+
+
+// declare html elements
+
 const box = document.querySelectorAll('.box');
 const btnVis = document.getElementById('btnVis');
-const btnSpk = document.getElementById('btnSpk');
+const btnAud = document.getElementById('btnSpk');
 const resultScreen = document.getElementById('resultScreen');
 const initialScreen = document.getElementById('initialScreen');
 const gameScreen = document.getElementById('gameScreen');
 const settingScreen = document.getElementById('settingScreen');
 const statsScreen = document.getElementById('statsScreen');
 const popupContainer = document.getElementById('popupContainer');
-var gameIsRunning = false;
-var settingTargetId;
+const screens = [
+    initialScreen,
+    gameScreen,
+    resultScreen,
+    settingScreen,
+    statsScreen
+]
 
-goToInitial();
+
+// add event listeners
 
 document.querySelectorAll(".returnBtn").forEach(btn => {
-    btn.addEventListener('click', goToInitial);
+    btn.addEventListener('click', () => goToScreen(enumScreens.initial));
 });
 document.querySelectorAll(".statsBtn").forEach(btn => {
-    btn.addEventListener('click', goToStats);
+    btn.addEventListener('click', () => goToScreen(enumScreens.stats));
 });
 document.querySelectorAll(".btnSetting").forEach(btn => {
-    btn.addEventListener('click', goToSettings);
+    btn.addEventListener('click', () => goToScreen(enumScreens.settings));
 });
 document.querySelector('.playBtn').addEventListener('click', play);
 document.getElementById('btnReplay').addEventListener('click', play);
@@ -45,20 +78,70 @@ document.querySelectorAll('.btnNMinus').forEach(btn => {
 document.querySelectorAll('.btnNAdd').forEach(btn => {
     btn.addEventListener('click', addN)
 })
-
-
-
-
+document.addEventListener('click', onClick)
+document.addEventListener('keydown', onKeyPress);
 popupContainer.addEventListener('click', togglePopup);
+document.querySelectorAll('.intField').forEach(intField => {
+    intField.addEventListener('beforeinput', e => {
+        if (e.inputType.includes('delete')) {
+            return; 
+        }
+        if (typeof e.data === 'string' && /[^0-9]/.test(e.data)) {
+            e.preventDefault();
+        }
+    });
+    intField.addEventListener('input', e =>{
+        let v = e.target.value;
+        let min = 1;
+        let max = 64;
+        if (v !== '') {
+            let num = Number(v);
+            if (num < min) num = min;
+            if (num > max) num = max;
+            v = String(num);
+        }
+        e.target.value = v;
+    })
+});
+document.querySelector('.dailyGoalField').addEventListener('change', e =>{
+    const v = e.target.value;
+    config.dailyGoal = v;
+})
 
-const sprites = loadSoundSprites();
-const letters = ['B', 'C', 'D', 'G', 'H', 'K', 'P', 'Q', 'T', 'W'];
+// load initial screen
 
-var visIsPressed = false;
-var spkIsPressed = false;
-var visResponseTime;
-var audResponseTime;
-var settingKeyExpected = false;
+goToScreen(enumScreens.initial);
+
+
+
+
+
+// ---------------------------------------------------
+//               FUNCTIONS ALL BELOW
+// ---------------------------------------------------
+
+
+
+// ---------------------------------------------------
+//               GAME-RELATED FUNCTIONS
+// ---------------------------------------------------
+
+
+// starts and loads the game
+
+function play(){
+    if (gameIsRunning){
+        return;
+    }
+    document.querySelectorAll('.gameNDisplayer').forEach(displayer => {
+        displayer.innerHTML = `N = ${N}`
+    });
+    goToScreen(enumScreens.game);
+    game();
+};
+
+
+// game function, controls everything about a running game
 
 function game(){
 
@@ -69,10 +152,6 @@ function game(){
     gameIsRunning = true;
 
     const [visual_stack, auditory_stack] = buildGameSequence();
-    console.log(visual_stack, auditory_stack)
-
-
-    setTimeout(showStimuli, config.stimDelay);
     let i = 0;
     let n_vis_matches = 0;
     let n_aud_matches = 0;
@@ -85,6 +164,10 @@ function game(){
     let visDelays = [];
     let audDelays = [];
 
+    gameSequenceTimeout = setTimeout(showStimuli, config.stimDelay);
+
+
+    // shows the current stimuli
     function showStimuli(){
         if (!gameIsRunning){
             return
@@ -99,10 +182,12 @@ function game(){
         }, config.stimTime);
         sprites.play(letters[auditory_stack[i]]);
         if (i < N+N_base){
-            setTimeout(sequenceMatchController, config.stimDelay);
+            gameSequenceTimeout = setTimeout(sequenceMatchController, config.stimDelay);
         }
     }
     
+
+    // controls the flow of the game
     function sequenceMatchController(){
         if (!gameIsRunning){
             return
@@ -152,7 +237,7 @@ function game(){
         visIsPressed = false;
         btnVis.style.backgroundColor = '#d3ceda';
         spkIsPressed = false;
-        btnSpk.style.backgroundColor = '#d3ceda';
+        btnAud.style.backgroundColor = '#d3ceda';
 
         i++;
         if (i < N+N_base){
@@ -162,7 +247,9 @@ function game(){
             finishGame();
         }
     }
+    
 
+    // finishes the game
     function finishGame(){
         gameIsRunning = false;
         const [gen_accuracy, vis_accuracy, aud_accuracy] = calcAccuracy(n_vis_matches, vis_misses, vis_falses, n_aud_matches, aud_misses, aud_falses);
@@ -201,7 +288,7 @@ function game(){
         }
 
         genAccuracyTxt.innerHTML = `${Math.floor(gen_accuracy*100)}%`;
-        visAccuracyTxt.innerHTML = `${Math.floor(aud_accuracy*100)}%`;
+        visAccuracyTxt.innerHTML = `${Math.floor(vis_accuracy*100)}%`;
         audAccuracyTxt.innerHTML = `${Math.floor(aud_accuracy*100)}%`;
         document.getElementById('visMatches').innerHTML     =   n_vis_matches;
         document.getElementById('visMisses').innerHTML      =   vis_misses;
@@ -210,181 +297,12 @@ function game(){
         document.getElementById('audMisses').innerHTML      =   aud_misses;
         document.getElementById('audFalses').innerHTML      =   aud_falses;
         dailyGamesPlayed++;
-        goToResult();
+        goToScreen(enumScreens.result);
     }
 }
 
-function loadSoundSprites() {
-    const sprites = new Howl({
-        src: ['/audios/audio_sprites.mp3', '/audios/audio_sprites.wav'],
-        html5: false,
-        sprite: {
-            B: [900, 850],
-            C: [1900, 850],
-            D: [2900, 850],
-            G: [3900, 850],
-            H: [4900, 850],
-            K: [5900, 850],
-            P: [6900, 850],
-            Q: [7900, 850],
-            T: [8900, 850],
-            W: [9900, 850],
-        },
-    });
-    return sprites
-}
 
-
-function gameOnKeyPress(e){
-    if (e.code === config.visKey) {
-        visClick();
-    }
-    else if (e.code === config.audKey) {
-        spkClick();
-    }
-    else if (e.code === config.returnKey){
-        goToInitial();
-    }
-}
-
-function initialOnKeyPress(e){
-    switch(e.code){
-        case config.playKey:
-            play();
-            break;
-        case config.goToSettingsKey:
-            goToSettings();
-            break;
-        case config.goToStatsKey:
-            goToStats();
-            break;
-        case config.addNKey:
-            addN();
-            break;
-        case config.subtractNKey:
-            subtractN();
-            break;
-    }
-}
-
-function resultOnKeyPress(e){
-    switch(e.code){
-        case config.playKey:
-            play();
-            break;
-        case config.addNKey:
-            addN();
-            break;
-        case config.subtractNKey:
-            subtractN();
-            break;
-    }
-}
-
-function settingOnKeyPress(e){
-    if (settingKeyExpected){
-        switch(settingTargetId){
-            case 'visKeyBtn':
-                config.visKey = e.code;
-                break;
-            case 'audKeyBtn':
-                config.audKey = e.code;
-                break;
-            case 'returnKeyBtn':
-                config.returnKey = e.code;
-                break;
-            case 'playKeyBtn':
-                config.playKey = e.code;
-                break;
-            case 'openSettingsKeyBtn':
-                config.goToSettingsKey = e.code;
-                break;
-            case 'openStatsKeyBtn':
-                config.goToStatsKey = e.code;
-                break;
-            case 'addNKeyBtn':
-                config.addNKey = e.code;
-                break;
-            case 'subtractNKeyBtn':
-                config.subtractNKey = e.code;
-        }
-        loadSettings();
-        togglePopup();
-        settingKeyExpected = false;
-    }
-    else if (e.code === config.returnKey){
-        goToInitial();
-    }
-}
-
-function statsOnKeyPress(e){
-    switch(e.code){
-        case config.returnKey:
-            goToInitial();
-    }
-}
-
-function visClick(){
-    if (!visIsPressed){
-        visIsPressed = true;
-        btnVis.style.backgroundColor = '#b9a3d8'
-        visResponseTime = performance.now();
-    }
-    else{
-        visIsPressed = false;
-        btnVis.style.backgroundColor = '#d3ceda'
-    }
-}
-
-function spkClick(){
-    if (!spkIsPressed){
-        spkIsPressed = true;
-        btnSpk.style.backgroundColor = '#b9a3d8'
-        audResponseTime = performance.now();
-    }
-    else{
-        spkIsPressed = false;
-        btnSpk.style.backgroundColor = '#d3ceda'
-    }
-}
-
-function settingBtnClick(e){
-    settingTargetId = e.target.id;
-    if ([
-        "visKeyBtn",
-        "audKeyBtn",
-        "returnKeyBtn",
-        "playKeyBtn",
-        "openSettingsKeyBtn",
-        "openStatsKeyBtn",
-        "addNKeyBtn",
-        "subtractNKeyBtn"
-        ].includes(settingTargetId)) {
-        e.target.blur();
-        settingKeyExpected = true;
-        togglePopup();
-    }
-    else if(settingTargetId === 'popupContainer'){
-        settingKeyExpected = false;
-        togglePopup();
-    }
-};
-
-function addN(){
-    N++;
-    document.querySelectorAll('.NDisplayer').forEach(displayer => {
-        displayer.innerHTML = `N = ${N}`;
-    });
-};
-
-function subtractN(){
-    if (N > 1){
-        N--;
-        document.querySelectorAll('.NDisplayer').forEach(displayer => {
-            displayer.innerHTML = `N = ${N}`;
-        });
-    }
-}
+// builds the game sequence (visual and auditory stacks)
 
 function buildGameSequence (){
     
@@ -450,7 +368,6 @@ function buildGameSequence (){
 };
 
 
-
 function getRandomNumbers(min, max, count) {
   const arr = [];
   for (let i = 0; i < count; i++) {
@@ -459,6 +376,7 @@ function getRandomNumbers(min, max, count) {
   return arr;
 };
 
+
 function calcAccuracy(vis_matches, vis_misses, vis_falses, aud_matches, aud_misses, aud_falses){
     const gen_accuracy = (vis_matches+aud_matches)/(vis_matches+vis_falses+vis_misses+aud_matches+aud_misses+aud_falses);
     const vis_accuracy = (vis_matches)/(vis_matches+vis_misses+vis_falses);
@@ -466,36 +384,231 @@ function calcAccuracy(vis_matches, vis_misses, vis_falses, aud_matches, aud_miss
     return [gen_accuracy, vis_accuracy, aud_accuracy];
 }
 
-function play(){
-    document.querySelectorAll('.screens').forEach((screen) =>{
-        screen.style.display = 'none'
+
+function visClick(){
+    if (!visIsPressed){
+        visIsPressed = true;
+        btnVis.style.backgroundColor = '#b9a3d8'
+        visResponseTime = performance.now();
+    }
+    else{
+        visIsPressed = false;
+        btnVis.style.backgroundColor = '#d3ceda'
+    }
+}
+
+
+function audClick(){
+    if (!spkIsPressed){
+        spkIsPressed = true;
+        btnAud.style.backgroundColor = '#b9a3d8'
+        audResponseTime = performance.now();
+    }
+    else{
+        spkIsPressed = false;
+        btnAud.style.backgroundColor = '#d3ceda'
+    }
+}
+
+// get sound sprites
+function loadSoundSprites() {
+    const sprites = new Howl({
+        src: ['/audios/audio_sprites.mp3', '/audios/audio_sprites.wav'],
+        html5: false,
+        sprite: {
+            B: [900, 850],
+            C: [1900, 850],
+            D: [2900, 850],
+            G: [3900, 850],
+            H: [4900, 850],
+            K: [5900, 850],
+            P: [6900, 850],
+            Q: [7900, 850],
+            T: [8900, 850],
+            W: [9900, 850],
+        },
     });
-    document.addEventListener('keydown', gameOnKeyPress);
-    btnVis.addEventListener('click', visClick);
-    btnSpk.addEventListener('click', spkClick);
-    document.removeEventListener('keydown', initialOnKeyPress);
-    document.removeEventListener('keydown', resultOnKeyPress)
-    document.querySelectorAll('.gameNDisplayer').forEach(displayer => {
-        displayer.innerHTML = `N = ${N}`
+    return sprites
+}
+
+
+// ---------------------------------------------------
+//               EVENT LISTENERS
+// ---------------------------------------------------
+
+
+function onKeyPress(e){
+
+    if (e.code === config.returnKey){
+        goToScreen(enumScreens.initial)
+    }
+    else{
+        switch(currentScreen){
+
+            case enumScreens.initial:
+                switch(e.code){
+                    case config.playKey:
+                        play();
+                        break;
+                    case config.goToSettingsKey:
+                        goToScreen(enumScreens.settings);
+                        break;
+                    case config.goToStatsKey:
+                        goToScreen(enumScreens.stats);
+                        break;
+                    case config.addNKey:
+                        addN();
+                        break;
+                    case config.subtractNKey:
+                        subtractN();
+                        break;
+                }
+                break;
+            
+            case enumScreens.game:
+                if (e.code === config.visKey) {
+                    visClick();
+                }
+                else if (e.code === config.audKey) {
+                    audClick();
+                }
+                break;
+            
+            case enumScreens.result:
+                switch(e.code){
+                    case config.playKey:
+                        play();
+                        break;
+                    case config.addNKey:
+                        addN();
+                        break;
+                    case config.subtractNKey:
+                        subtractN();
+                        break;
+                }
+                break;
+            
+            case enumScreens.settings:
+                if (settingKeyExpected){
+                    switch(settingTargetId){
+                        case 'visKeyBtn':
+                            config.visKey = e.code;
+                            break;
+                        case 'audKeyBtn':
+                            config.audKey = e.code;
+                            break;
+                        case 'returnKeyBtn':
+                            config.returnKey = e.code;
+                            break;
+                        case 'playKeyBtn':
+                            config.playKey = e.code;
+                            break;
+                        case 'openSettingsKeyBtn':
+                            config.goToSettingsKey = e.code;
+                            break;
+                        case 'openStatsKeyBtn':
+                            config.goToStatsKey = e.code;
+                            break;
+                        case 'addNKeyBtn':
+                            config.addNKey = e.code;
+                            break;
+                        case 'subtractNKeyBtn':
+                            config.subtractNKey = e.code;
+                    }
+                    loadSettings();
+                    togglePopup();
+                    settingKeyExpected = false;
+                }
+                break;
+
+            case enumScreens.stats:
+                break;
+        }
+    }  
+}
+
+
+function onClick(e){
+    if (gameIsRunning){
+        switch (e.target){
+            case btnVis:
+                visClick();
+                break;
+            case btnAud:
+                audClick();
+        }
+    }
+    else if([
+        "visKeyBtn",
+        "audKeyBtn",
+        "returnKeyBtn",
+        "playKeyBtn",
+        "openSettingsKeyBtn",
+        "openStatsKeyBtn",
+        "addNKeyBtn",
+        "subtractNKeyBtn"
+        ].includes(e.target.id)){
+        e.target.blur();
+        settingTargetId = e.target.id;
+        settingKeyExpected = true;
+        togglePopup();
+    }
+    else if(settingTargetId === 'popupContainer'){
+        settingKeyExpected = false;
+        togglePopup();
+    }
+}
+
+function addN(){
+    N++;
+    document.querySelectorAll('.NDisplayer').forEach(displayer => {
+        displayer.innerHTML = `N = ${N}`;
     });
-    gameScreen.style.display = 'block';
-    game();
 };
 
-function goToSettings(){
-    document.querySelectorAll('.keySettingBtn').forEach(btn => {
-        btn.addEventListener('click', settingBtnClick);
-    });
-    document.querySelectorAll('.screens').forEach(screen =>{
-        screen.style.display = 'none'
-    });
-    loadSettings();
-    document.removeEventListener('keydown', initialOnKeyPress);
-    document.addEventListener('keydown', settingOnKeyPress);
-    settingScreen.style.display = 'block';
-};
+function subtractN(){
+    if (N > 1){
+        N--;
+        document.querySelectorAll('.NDisplayer').forEach(displayer => {
+            displayer.innerHTML = `N = ${N}`;
+        });
+    }
+}
+
+
+// ---------------------------------------------------
+//                    LOADING HTML
+// ---------------------------------------------------
+
+
+// loads all screens
+function goToScreen(screenEnum){
+    document.activeElement.blur();
+    switch(screenEnum){
+        case enumScreens.initial:
+            loadInitial();
+            break;
+        case enumScreens.game:
+            break;
+        case enumScreens.result:
+            loadResult();
+            break;
+        case enumScreens.settings:
+            loadSettings();
+            break;
+        case enumScreens.stats:
+            break;
+    }
+    const oldScreen = screens[currentScreen];
+    const newScreen = screens[screenEnum];
+    oldScreen.style.display = 'none';
+    newScreen.style.display = 'block';
+    currentScreen = screenEnum;
+}
+
 
 function loadSettings(){
+    document.querySelector('.dailyGoalField').value = config.dailyGoal;
     document.getElementById('visKeyBtn').innerHTML = config.visKey;
     document.getElementById('audKeyBtn').innerHTML = config.audKey;
     document.getElementById('returnKeyBtn').innerHTML = config.returnKey;
@@ -506,44 +619,23 @@ function loadSettings(){
     document.getElementById('subtractNKeyBtn').innerHTML = config.subtractNKey;
 }
 
-function goToInitial(){
-    gameIsRunning = false;
-    document.addEventListener('keydown', initialOnKeyPress);
-    document.removeEventListener('keydown', resultOnKeyPress);
-    document.removeEventListener('keydown', gameOnKeyPress);
-    document.removeEventListener('keydown', settingOnKeyPress);
-    document.querySelectorAll('.screens').forEach((screen) =>{
-        screen.style.display = 'none'
-    });
+function loadInitial(){
+    if (gameIsRunning){
+        gameIsRunning = false;
+        clearTimeout(gameSequenceTimeout);
+    }
     document.querySelector('.initialNDisplayerText').innerHTML = `N = ${N}`;
     document.querySelectorAll('.dailyNumber').forEach(displayer => {
         displayer.innerHTML = `${dailyGamesPlayed}/${config.dailyGoal}`
     });
-    initialScreen.style.display = 'block';
 };
 
-function goToStats(){
-    document.querySelectorAll('.screens').forEach((screen) =>{
-        screen.style.display = 'none'
-    });
-    document.addEventListener('keydown', statsOnKeyPress);
-    document.removeEventListener('keydown', initialOnKeyPress);
-    statsScreen.style.display = 'block';
-};
 
-function goToResult(){
-    document.querySelectorAll('.screens').forEach((screen) =>{
-        screen.style.display = 'none'
-    });
-    btnVis.removeEventListener('click', visClick);
-    btnSpk.removeEventListener('click', spkClick);
-    document.removeEventListener('keydown', gameOnKeyPress);
-    document.addEventListener('keydown', resultOnKeyPress);
+function loadResult(){
     document.querySelectorAll('.dailyNumber').forEach(displayer => {
         displayer.innerHTML = `${dailyGamesPlayed}/${config.dailyGoal}`
     });
     document.querySelector('.resultNDisplayerText').innerHTML = `N = ${N}`
-    resultScreen.style.display = 'block';
 };
 
 function togglePopup(){
@@ -555,3 +647,36 @@ function togglePopup(){
         settingKeyExpected = false; 
     }
 }
+
+
+// ---------------------------------------------------
+//                   AUTH CONTROL
+// ---------------------------------------------------
+
+onAuthStateChanged(auth, (user) =>{
+    if (user){
+        console.log("user is logged");
+    }
+})
+
+async function signIn(email, password) {
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        return userCredential.user;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+
+async function signUp(email, password) {
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        return userCredential.user;
+    }
+    catch (err) {
+        throw err;
+    }
+}
+
+
