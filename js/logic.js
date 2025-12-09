@@ -1,12 +1,17 @@
-import {app, analytics, auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged} from '/js/firebase.js'
+import {app, analytics, auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+    getFirestore, doc, collection, getDocs, query, where, limit,
+    setDoc, updateDoc, addDoc, getDoc, runTransaction, increment, db
+} from '/js/firebase.js'
 
 
 // essential declaration
-
-var N = 1;
+getDate()
+let N = 1;
 const N_base = 20;
-var dailyGamesPlayed = 0;
-var config = {
+let dailyGamesPlayed = 0;
+let stimTime = 750;
+let stimDelay = 2800;
+let config = {
     "visKey":'KeyD',
     "audKey":'KeyF',
     "playKey":'Space',
@@ -15,8 +20,6 @@ var config = {
     "goToStatsKey":'KeyK',
     "addNKey":'ArrowUp',
     "subtractNKey":'ArrowDown',
-    "stimTime":750,
-    "stimDelay":2800,
     "dailyGoal":20
 };
 const enumScreens = {
@@ -26,17 +29,26 @@ const enumScreens = {
     "settings":3,
     "stats":4
 };
+const enumPopups = {
+    "changeKey":0,
+    "login":1
+}
 const sprites = loadSoundSprites();
 const letters = ['B', 'C', 'D', 'G', 'H', 'K', 'P', 'Q', 'T', 'W'];
-var currentScreen = 0;
-var gameIsRunning = false;
-var gameSequenceTimeout;
-var settingTargetId = "";
-var visIsPressed = false;
-var spkIsPressed = false;
-var visResponseTime;
-var audResponseTime;
-var settingKeyExpected = false;
+let currentScreen = 0;
+let currentPopup;
+let gameIsRunning = false;
+let gameSequenceTimeout;
+let settingTargetId = "";
+let visIsPressed = false;
+let spkIsPressed = false;
+let visResponseTime;
+let audResponseTime;
+let settingKeyExpected = false;
+let userIsLogged = false;
+let user;
+let settingsChanged = false;
+let playedToday;
 
 
 // declare html elements
@@ -50,12 +62,19 @@ const gameScreen = document.getElementById('gameScreen');
 const settingScreen = document.getElementById('settingScreen');
 const statsScreen = document.getElementById('statsScreen');
 const popupContainer = document.getElementById('popupContainer');
+const popupChangeKey = document.getElementById('changeKeyPopup');
+const popupLogin = document.getElementById('loginPopup');
+const logBtn = document.querySelector('.logBtn');
 const screens = [
     initialScreen,
     gameScreen,
     resultScreen,
     settingScreen,
     statsScreen
+]
+const popups = [
+    popupChangeKey,
+    popupLogin
 ]
 
 
@@ -80,7 +99,6 @@ document.querySelectorAll('.btnNAdd').forEach(btn => {
 })
 document.addEventListener('click', onClick)
 document.addEventListener('keydown', onKeyPress);
-popupContainer.addEventListener('click', togglePopup);
 document.querySelectorAll('.intField').forEach(intField => {
     intField.addEventListener('beforeinput', e => {
         if (e.inputType.includes('delete')) {
@@ -106,7 +124,11 @@ document.querySelectorAll('.intField').forEach(intField => {
 document.querySelector('.dailyGoalField').addEventListener('change', e =>{
     const v = e.target.value;
     config.dailyGoal = v;
-})
+    updateSettings(user.uid, config);
+});
+document.getElementById('loginBtn').addEventListener('click', () => {doLogin();})
+
+
 
 // load initial screen
 
@@ -164,7 +186,7 @@ function game(){
     let visDelays = [];
     let audDelays = [];
 
-    gameSequenceTimeout = setTimeout(showStimuli, config.stimDelay);
+    gameSequenceTimeout = setTimeout(showStimuli, stimDelay);
 
 
     // shows the current stimuli
@@ -179,10 +201,10 @@ function game(){
         box[current_vis].style.fill = '#56a1df';
         setTimeout(() => {
             box[current_vis].style.fill = '#a8d2dc';
-        }, config.stimTime);
+        }, stimTime);
         sprites.play(letters[auditory_stack[i]]);
         if (i < N+N_base){
-            gameSequenceTimeout = setTimeout(sequenceMatchController, config.stimDelay);
+            gameSequenceTimeout = setTimeout(sequenceMatchController, stimDelay);
         }
     }
     
@@ -298,6 +320,21 @@ function game(){
         document.getElementById('audFalses').innerHTML      =   aud_falses;
         dailyGamesPlayed++;
         goToScreen(enumScreens.result);
+        if (userIsLogged){
+            const gameDate = getDate();
+            const [avgVisDelay, avgAudDelay] = calcDelays(visDelays, audDelays);
+            const gameStats = {
+                "n":N,
+                "genAccuracy":gen_accuracy,
+                "visAccuracy":vis_accuracy,
+                "audAccuracy":aud_accuracy,
+                "avgVisDelay":avgVisDelay,
+                "avgAudDelay":avgAudDelay,
+                "date":gameDate
+            };
+            updateDailyGamesPlayed(user.uid);
+            saveGame(user.uid, gameStats);
+        }
     }
 }
 
@@ -384,6 +421,18 @@ function calcAccuracy(vis_matches, vis_misses, vis_falses, aud_matches, aud_miss
     return [gen_accuracy, vis_accuracy, aud_accuracy];
 }
 
+function calcDelays(visDelays, audDelays){
+    let avgVisDelay = null;
+    let avgAudDelay = null;
+    if (visDelays.length !== 0){
+        avgVisDelay = Math.floor(visDelays.reduce((sum, x) => sum + x, 0) / visDelays.length);
+    }
+    if (audDelays.length !== 0){
+        avgAudDelay = Math.floor(audDelays.reduce((sum, x) => sum + x, 0) / audDelays.length);
+    }
+    return [avgVisDelay, avgAudDelay];
+}
+
 
 function visClick(){
     if (!visIsPressed){
@@ -438,13 +487,18 @@ function loadSoundSprites() {
 
 
 function onKeyPress(e){
-
-    if (e.code === config.returnKey){
+    const typing =
+    e.target.tagName === 'INPUT' ||
+    e.target.tagName === 'TEXTAREA' ||
+    e.target.isContentEditable;
+    if (typing){
+        return;
+    }
+    if (e.code === config.returnKey && !settingKeyExpected){
         goToScreen(enumScreens.initial)
     }
     else{
         switch(currentScreen){
-
             case enumScreens.initial:
                 switch(e.code){
                     case config.playKey:
@@ -516,8 +570,9 @@ function onKeyPress(e){
                             config.subtractNKey = e.code;
                     }
                     loadSettings();
-                    togglePopup();
+                    closePopup();
                     settingKeyExpected = false;
+                    settingsChanged = true;
                 }
                 break;
 
@@ -551,11 +606,26 @@ function onClick(e){
         e.target.blur();
         settingTargetId = e.target.id;
         settingKeyExpected = true;
-        togglePopup();
+        showPopup(enumPopups.changeKey);
     }
-    else if(settingTargetId === 'popupContainer'){
-        settingKeyExpected = false;
-        togglePopup();
+    else if(e.target.id === 'popupContainer'){
+        closePopup();
+    }
+    else if(e.target === logBtn){
+        if (userIsLogged){
+            try {
+                signOut(auth);
+                userIsLogged = false;
+            }
+            catch(error){
+                console.log("logout error");
+            }
+            loadInitial();
+        }
+        else{
+            showPopup(enumPopups.login);
+
+        }
     }
 }
 
@@ -572,6 +642,17 @@ function subtractN(){
         document.querySelectorAll('.NDisplayer').forEach(displayer => {
             displayer.innerHTML = `N = ${N}`;
         });
+    }
+}
+
+function logChange(){
+    if (userIsLogged){
+        signOut(auth);
+        userIsLogged = false;
+        loadInitial();
+    }
+    else{
+        
     }
 }
 
@@ -603,6 +684,11 @@ function goToScreen(screenEnum){
     const newScreen = screens[screenEnum];
     oldScreen.style.display = 'none';
     newScreen.style.display = 'block';
+    if (currentScreen = enumScreens.settings){
+        if (settingsChanged){
+            updateSettings(user.uid, config);
+        }
+    }
     currentScreen = screenEnum;
 }
 
@@ -624,6 +710,12 @@ function loadInitial(){
         gameIsRunning = false;
         clearTimeout(gameSequenceTimeout);
     }
+    if (userIsLogged){
+        document.querySelector('.logBtn').innerHTML = "log out";
+    }
+    else{
+        document.querySelector('.logBtn').innerHTML = "log in";
+    }
     document.querySelector('.initialNDisplayerText').innerHTML = `N = ${N}`;
     document.querySelectorAll('.dailyNumber').forEach(displayer => {
         displayer.innerHTML = `${dailyGamesPlayed}/${config.dailyGoal}`
@@ -644,39 +736,121 @@ function togglePopup(){
     }
     else{
         popupContainer.style.display = 'none';
-        settingKeyExpected = false; 
+        settingKeyExpected = false;
     }
 }
+
+function showPopup(popupEnum){
+    popupContainer.style.display = 'block';
+    popups[popupEnum].style.display = 'block';
+    currentPopup = popupEnum;
+}
+
+function closePopup(){
+    popupContainer.style.display = 'none';
+    popups[currentPopup].style.display = 'none';
+    if (settingKeyExpected){
+        settingKeyExpected = false;
+    }
+}
+
 
 
 // ---------------------------------------------------
 //                   AUTH CONTROL
 // ---------------------------------------------------
 
-onAuthStateChanged(auth, (user) =>{
-    if (user){
+onAuthStateChanged(auth, async (usr) =>{
+    if (usr){
         console.log("user is logged");
+        user = usr;
+        userIsLogged = true;
+        loadInitial();
+        const dateString = getDate();
+        playedToday = await hasPlayedToday(user.uid, dateString)
+        console.log(playedToday)
+        if (!playedToday){
+            resetDailyGamesPlayed(user.uid)
+        }
+    }
+    else{
+        console.log("user isn't logged");
     }
 })
 
 async function signIn(email, password) {
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        return userCredential.user;
+        await signInWithEmailAndPassword(auth, email, password);
+        return true;
     }
-    catch (error) {
-        throw error;
+    catch (err) {
+        return false;
     }
 }
+
 
 async function signUp(email, password) {
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        return userCredential.user;
+        await createUserWithEmailAndPassword(auth, email, password);
+        return true;
     }
     catch (err) {
-        throw err;
+        return false;
+    }
+}
+
+async function doLogin(){
+    closePopup(enumPopups.login);
+    const loginUser = document.getElementById('loginUser');
+    const loginPassword = document.getElementById('loginPassword');
+    const result = await signIn(loginUser.value, loginPassword.value);
+    loginUser.value = '';
+    loginPassword.value = '';
+    if (result){
+        userIsLogged = true;
     }
 }
 
 
+// ---------------------------------------------------
+//                   DB RELATED
+// ---------------------------------------------------
+
+
+function getDate(){
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const localDate = `${year}-${month}-${day}`;
+    return localDate;
+}
+
+const updateDailyGamesPlayed = async (uid, i = 1) => {
+  const userDocRef = doc(db, "infouser", uid);
+  await updateDoc(userDocRef, { dailyGamesPlayed: increment(i) });
+};
+
+const updateSettings = async (uid, newSettings) => {
+  const userDocRef = doc(db, "infouser", uid);
+  await updateDoc(userDocRef, {
+    settings: newSettings
+  });
+};
+
+const saveGame = async (uid, gameData) => {
+  const gamesColRef = collection(db, "infouser", uid, "games");
+  const newDocRef = await addDoc(gamesColRef, gameData);
+};
+
+const hasPlayedToday = async (uid, currentDateString) => {
+  const gamesColRef = collection(db, "infouser", uid, "games");
+  const q = query(gamesColRef, where("date", "==", currentDateString), limit(1));
+  const qSnap = await getDocs(q);
+  return !qSnap.empty;
+};
+
+const resetDailyGamesPlayed = async (uid) => {
+  const userDocRef = doc(db, "infouser", uid);
+  await updateDoc(userDocRef, { dailyGamesPlayed: 0 });
+};

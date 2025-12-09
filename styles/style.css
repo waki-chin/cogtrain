@@ -285,8 +285,9 @@ header{
     border: solid #d3ceda;
     border-radius: 10px;
     width: 20rem;
-    margin: 20% auto;
-    display: flex;
+    margin: auto;
+    margin-top: 15rem;
+    display: none;
     flex-flow: column nowrap;
     justify-content: center;
     align-items: center;
@@ -371,8 +372,51 @@ header{
 .genSettingsText{
     font-size: 1.5rem;
 }
-
-
+.logBtn{
+    position: absolute;
+    right: 2rem;
+    bottom: 2rem;
+    font-size: 2rem;
+    border: none;
+    background: none;
+}
+.loginTextDiv{
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: flex-start;
+    justify-content: space-evenly;
+}
+.loginPopupText{
+    font-size: 1.5rem;
+    margin: 1.25rem;
+}
+.inputLogin{
+    font-size: 1.25rem;
+    margin-left: 1.25rem;
+}
+#loginPassword{
+    margin-bottom: 0rem;
+}
+#loginBtnDiv{
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}
+#loginBtn{
+    margin: 1.5rem;
+    border: solid #d3ceda;
+    border-radius: 10px;
+    background-color: #121212;
+    color: #d3ceda;
+    font-size: 1.5rem;
+    width: 75%;
+    padding: 0.25rem;
+}
+#loginPopup{
+    margin: auto;
+    margin-top: 10rem;
+}
 
 
 @media (max-width: 600px) {

@@ -4,9 +4,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebas
 
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
 
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
+import { 
+  getFirestore, doc, collection, getDocs, query, where, limit,
+  setDoc, updateDoc, addDoc, getDoc, runTransaction, increment
+}
+from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
 
 // TODO: Add SDKs for Firebase products that you want to use
 
@@ -44,4 +48,9 @@ const auth = getAuth(app)
 
 const analytics = getAnalytics(app);
 
-export {app, analytics, auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged}
+const db = getFirestore();
+
+export {app, analytics, auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+    getFirestore, doc, collection, getDocs, query, where, limit,
+    setDoc, updateDoc, addDoc, getDoc, runTransaction, increment, db
+}
