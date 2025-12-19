@@ -48,7 +48,6 @@ let settingKeyExpected = false;
 let userIsLogged = false;
 let user;
 let settingsChanged = false;
-let playedToday;
 
 
 // declare html elements
@@ -767,8 +766,7 @@ onAuthStateChanged(auth, async (usr) =>{
         userIsLogged = true;
         loadInitial();
         const dateString = getDate();
-        playedToday = await hasPlayedToday(user.uid, dateString)
-        console.log(playedToday)
+        const playedToday = await hasPlayedToday(user.uid, dateString);
         if (!playedToday){
             resetDailyGamesPlayed(user.uid)
         }
